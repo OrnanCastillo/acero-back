@@ -37,7 +37,12 @@ class MaterialModel {
 
     static async getAll() {
         try {
-            const [rows] = await pool.query('SELECT m.idMaterial, m.descripcion, m.idCategoria, c.descripcion AS categoria, sm.stock FROM materiales m INNER JOIN categoria_materiales c ON m.idCategoria = c.idCategoria INNER JOIN stock_material sm ON m.idMaterial = sm.idMaterial ORDER BY m.descripcion ASC');
+            const [rows] = await pool.query(`
+                SELECT m.idMaterial, m.descripcion, m.idCategoria, (m.kilogramos * sm.stock) AS kilogramos, (m.metros * sm.stock) AS metros, c.descripcion AS categoria, sm.stock 
+                    FROM materiales m 
+                    INNER JOIN categoria_materiales c ON m.idCategoria = c.idCategoria 
+                    INNER JOIN stock_material sm ON m.idMaterial = sm.idMaterial ORDER BY m.descripcion ASC`
+            );
             return rows;
         } catch (error) {
             console.error('Error al obtener todas las categorías:', error);
