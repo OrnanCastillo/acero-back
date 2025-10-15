@@ -1,11 +1,11 @@
 import pool from '../../config/db.js';
 
 class MaterialModel {
-    static async create(description, idCategoria, stock, detalle) {
+    static async create(description, idCategoria, stock, detalle, kilogramos, metros) {
         try {
             const [result] = await pool.query(
-                'INSERT INTO materiales (descripcion, idCategoria) VALUES (?,?)',
-                [description.toUpperCase(), idCategoria]
+                'INSERT INTO materiales (descripcion, idCategoria, kilogramos, metros) VALUES (?,?,?,?)',
+                [description.toUpperCase() + " (" + kilogramos + " KG/M" +  ")", idCategoria, kilogramos, metros]
             );
 
             await pool.query(
@@ -13,20 +13,15 @@ class MaterialModel {
                 [result.insertId, stock]
             );
 
-            const [categoryName] = await pool.query(
-                'SELECT descripcion FROM categoria_materiales WHERE idCategoria = ?', [idCategoria]
-            )
-
             const [reason] = await pool.query(
-                'INSERT INTO movimientos SET tipo = 2, detalle = ?, idMaterial = ?, fecha = NOW()', [detalle, result.insertId]
+                'INSERT INTO movimientos SET tipo = 2, detalle = ?, idMaterial = ?, fecha = NOW()', [detalle.toUpperCase(), result.insertId]
             )
         
             return { 
                 idMaterial: result.insertId, 
                 idCategoria, 
                 descripcion: description,
-                stock,
-                categoria: categoryName[0].descripcion
+                stock
 
             };
         } catch (error) {
@@ -38,10 +33,10 @@ class MaterialModel {
     static async getAll() {
         try {
             const [rows] = await pool.query(`
-                SELECT m.idMaterial, m.descripcion, m.idCategoria, (m.kilogramos * sm.stock) AS kilogramos, (m.metros * sm.stock) AS metros, c.descripcion AS categoria, sm.stock 
-                    FROM materiales m 
-                    INNER JOIN categoria_materiales c ON m.idCategoria = c.idCategoria 
-                    INNER JOIN stock_material sm ON m.idMaterial = sm.idMaterial ORDER BY m.descripcion ASC`
+                SELECT m.idMaterial, m.descripcion, m.idCategoria, (m.kilogramos * sm.stock) AS kilogramos, m.kilogramos AS m_kilogramos, (m.metros * sm.stock) AS metros, m.metros AS m_metros, c.descripcion AS categoria, sm.stock 
+                FROM materiales m 
+                INNER JOIN categoria_materiales c ON m.idCategoria = c.idCategoria 
+                INNER JOIN stock_material sm ON m.idMaterial = sm.idMaterial ORDER BY m.descripcion ASC`
             );
             return rows;
         } catch (error) {
@@ -60,22 +55,18 @@ class MaterialModel {
         }
     }
 
-    static async update(id, description, idCategoria, stock, motivo, detalle) {
+    static async update(id, description, idCategoria, stock, motivo, detalle, kilogramos, metros) {
         
         try {
             const [result] = await pool.query(
-                'UPDATE materiales SET descripcion = ?, idCategoria = ? WHERE idMaterial = ?',
-                [description.toUpperCase(), idCategoria, id]
+                'UPDATE materiales SET descripcion = ?, idCategoria = ?, kilogramos = ?, metros = ? WHERE idMaterial = ?',
+                [description.toUpperCase(), idCategoria, kilogramos, metros, id]
             );
 
             const [stockR] = await pool.query(
                 'UPDATE stock_material SET stock = ? WHERE idMaterial = ?',
                 [stock, id]
             );
-
-            const [info] = await pool.query(
-                'SELECT descripcion FROM categoria_materiales WHERE idCategoria = ?', [idCategoria]
-            )
 
             const [reason] = await pool.query(
                 'INSERT INTO movimientos SET tipo = ?, detalle = ?, idMaterial = ?, fecha = NOW()', [motivo, detalle, id]
@@ -85,8 +76,7 @@ class MaterialModel {
                 idMaterial: parseInt(id), 
                 idCategoria, 
                 descripcion: description,
-                stock,
-                categoria: info[0].descripcion
+                stock
 
             };
         } catch (error) {

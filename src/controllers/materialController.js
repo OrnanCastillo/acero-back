@@ -3,13 +3,13 @@ import MaterialModel from "../models/materialModel.js";
 const materialController = {
     createMaterial: async (req, res) => {
         try {
-            const { description, idCategoria, stock, detalle } = req.body;
+            const { description, idCategoria, stock, detalle, kilogramos, metros } = req.body;
 
-            if (!description || !idCategoria || !stock || !detalle) {
+            if (!description || !idCategoria || !stock || !detalle || !kilogramos || !metros) {
                 return res.status(400).json({ message: 'Todos los campos son requeridos.' });
             }
 
-            const newMaterial = await MaterialModel.create(description, idCategoria, stock, detalle);
+            const newMaterial = await MaterialModel.create(description, idCategoria, stock, detalle, kilogramos, metros);
             res.status(201).json({
                 message: 'Material agregado exitosamente.',
                 material: newMaterial,
@@ -50,13 +50,13 @@ const materialController = {
     updateMaterial: async (req, res) => {
         try {
             const { id } = req.params;
-            const { description, idCategoria, stock, motivo, detalle } = req.body;
+            const { description, idCategoria, stock, motivo, detalle, kilogramos, metros } = req.body;
 
-            if (!description || !idCategoria || stock === "" || !motivo || !detalle) {
+            if (!description || !idCategoria || stock === "" || !motivo || !detalle || !kilogramos || !metros) {
                 return res.status(400).json({ message: 'Todos los campos son requeridos.' });
             }
 
-            const updated = await MaterialModel.update(id, description, idCategoria, stock, motivo, detalle);
+            const updated = await MaterialModel.update(id, description, idCategoria, stock, motivo, detalle, kilogramos, metros);
 
             if (!updated) {
                 return res.status(404).json({ message: 'Material no encontrado o no hubo cambios.' });
