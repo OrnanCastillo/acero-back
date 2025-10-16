@@ -5,11 +5,12 @@ const toolController = {
         try {
             const { description, idCategoria, modelo, num_serie, condicion, status } = req.body;
 
-            if (!description || !idCategoria || !modelo || !num_serie || !condicion || !status) {
+            if (!description || !idCategoria || !condicion || !status) {
                 return res.status(400).json({ message: 'Ambos campos son requeridos.' });
             }
 
             const newTool = await ToolModel.create(description, idCategoria, modelo, num_serie, condicion, status);
+
             res.status(201).json({
                 message: 'Herramienta agregada exitosamente.',
                 tool: newTool,
@@ -25,7 +26,7 @@ const toolController = {
             const { id } = req.params;
             const { description, idCategoria, modelo, num_serie, condicion, status } = req.body;
 
-            if (!description || !idCategoria || !modelo || !num_serie || !condicion || !status) {
+            if (!description || !idCategoria || !condicion || !status) {
                 return res.status(400).json({ message: 'Ambos campos son requeridos.' });
             }
 
