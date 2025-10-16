@@ -31,7 +31,7 @@ const authController = {
                 message: 'Login exitoso',
                 token,
                 user: {
-                    id: user.id,
+                    id: user.idUsuario,
                     usuario: user.usuario,
                 },
             });

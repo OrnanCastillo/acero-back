@@ -19,6 +19,15 @@ class UserModel {
             throw error;
         }
     }
+    static async getPermiso(idUsuario) {
+        try {
+            const [rows] = await pool.query('SELECT * FROM permisos_modificacion WHERE idUsuario = ?', [idUsuario]);
+            return rows[0];
+        } catch (error) {
+            console.error(`Error al buscar usuario:`, error);
+            throw error;
+        }
+    }
 }
 
 export default UserModel;
