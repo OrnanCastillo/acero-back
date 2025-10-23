@@ -7,6 +7,7 @@ import materialCategoryRouter from './src/routes/materialCategoryRouter.js';
 import toolRouter from './src/routes/toolRouter.js';
 import materialRouter from './src/routes/materialRouter.js';
 import authRouter from './src/routes/authRouter.js';
+import projectRouter from './src/routes/projectRouter.js';
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,7 @@ app.use('/materialCategories', materialCategoryRouter);
 app.use('/tools', toolRouter);
 app.use('/materials', materialRouter);
 app.use('/auth', authRouter);
+app.use('/projects', projectRouter);
 
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
