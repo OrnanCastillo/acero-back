@@ -20,9 +20,39 @@ const materialController = {
         }
     },
 
+    createPlates: async (req, res) => {
+        try {
+            const { description, idCategoria, detalle, kilogramos, metros } = req.body;
+
+            if (!description || !idCategoria || !detalle || !kilogramos || !metros) {
+                return res.status(400).json({ message: 'Todos los campos son requeridos.' });
+            }
+
+            const newMaterial = await MaterialModel.createPlate(description, idCategoria, detalle, kilogramos, metros);
+            res.status(201).json({
+                message: 'Material agregado exitosamente.',
+                material: newMaterial,
+            });
+        } catch (error) {
+            console.error('Error en el controlador al crear material:', error);
+            res.status(500).json({ message: 'Error interno del servidor.' });
+        }
+    },
+
     getAllMaterial: async (req, res) => {
         try {
             const material = await MaterialModel.getAll();
+            res.json(material);
+        } catch (error) {
+            console.error('Error en el controlador al obtener materiales:', error);
+            res.status(500).json({ message: 'Error interno del servidor.' });
+        }
+    },
+
+    getAllPlates: async (req, res) => {
+        
+        try {
+            const material = await MaterialModel.getAllPlates();
             res.json(material);
         } catch (error) {
             console.error('Error en el controlador al obtener materiales:', error);
@@ -57,6 +87,31 @@ const materialController = {
             }
 
             const updated = await MaterialModel.update(id, description, idCategoria, stock, motivo, detalle, kilogramos, metros);
+
+            if (!updated) {
+                return res.status(404).json({ message: 'Material no encontrado o no hubo cambios.' });
+            }
+
+            res.status(201).json({
+                message: 'Material actualizado exitosamente.',
+                material: updated,
+            });
+        } catch (error) {
+            console.error('Error en el controlador al actualizar material:', error);
+            res.status(500).json({ message: 'Error interno del servidor.' });
+        }
+    },
+
+    updatePlate: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { description, idCategoria, motivo, detalle, kilogramos, metros } = req.body;
+
+            if (!description || !idCategoria || !motivo || !detalle || !kilogramos || !metros) {
+                return res.status(400).json({ message: 'Todos los campos son requeridos.' });
+            }
+
+            const updated = await MaterialModel.updatePlate(id, description, idCategoria, motivo, detalle, kilogramos, metros);
 
             if (!updated) {
                 return res.status(404).json({ message: 'Material no encontrado o no hubo cambios.' });

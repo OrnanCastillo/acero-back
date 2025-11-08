@@ -14,7 +14,7 @@ class MaterialModel {
             );
 
             const [reason] = await pool.query(
-                'INSERT INTO movimientos SET tipo = 2, detalle = ?, idMaterial = ?, fecha = NOW()', [detalle.toUpperCase(), result.insertId]
+                'INSERT INTO movimientos SET tipo = 2, detalle = ?, idMaterial = ?, fecha = NOW(), material_tipo = 1', [detalle.toUpperCase(), result.insertId]
             )
         
             return { 
@@ -30,6 +30,28 @@ class MaterialModel {
         }
     }
 
+    static async createPlate(description, idCategoria, detalle, kilogramos, metros) {
+        try {
+            const [result] = await pool.query(
+                'INSERT INTO placas (descripcion, idCategoria, kilogramos, metros_cuadrados) VALUES (?,?,?,?)',
+                [description.toUpperCase(), idCategoria, kilogramos, metros]
+            );
+
+            const [reason] = await pool.query(
+                'INSERT INTO movimientos SET tipo = 2, detalle = ?, idMaterial = ?, fecha = NOW(), material_tipo = 2', [detalle.toUpperCase(), result.insertId]
+            )
+        
+            return { 
+                idMaterial: result.insertId, 
+                idCategoria, 
+                descripcion: description,
+            };
+        } catch (error) {
+            console.error('Error al crear una nueva categoría:', error);
+            throw error;
+        }
+    }
+
     static async getAll() {
         try {
             const [rows] = await pool.query(`
@@ -37,6 +59,21 @@ class MaterialModel {
                 FROM materiales m 
                 INNER JOIN categoria_materiales c ON m.idCategoria = c.idCategoria 
                 INNER JOIN stock_material sm ON m.idMaterial = sm.idMaterial ORDER BY m.descripcion ASC`
+            );
+            return rows;
+        } catch (error) {
+            console.error('Error al obtener todas las categorías:', error);
+            throw error;
+        }
+    }
+
+    static async getAllPlates() {
+        try {
+            const [rows] = await pool.query(`
+                SELECT p.idMaterial, p.descripcion, p.idCategoria, p.kilogramos, p.metros_cuadrados, c.descripcion AS categoria 
+                FROM placas p 
+                INNER JOIN categoria_materiales c ON p.idCategoria = c.idCategoria 
+                ORDER BY p.descripcion ASC`
             );
             return rows;
         } catch (error) {
@@ -69,7 +106,7 @@ class MaterialModel {
             );
 
             const [reason] = await pool.query(
-                'INSERT INTO movimientos SET tipo = ?, detalle = ?, idMaterial = ?, fecha = NOW()', [motivo, detalle, id]
+                'INSERT INTO movimientos SET tipo = ?, detalle = ?, idMaterial = ?, fecha = NOW(), material_tipo = 1', [motivo, detalle, id]
             )
 
             return { 
@@ -78,6 +115,29 @@ class MaterialModel {
                 descripcion: description,
                 stock
 
+            };
+        } catch (error) {
+            console.error(`Error al actualizar material con ID ${id}:`, error);
+            throw error;
+        }
+    }
+
+    static async updatePlate(id, description, idCategoria, motivo, detalle, kilogramos, metros) {
+        
+        try {
+            const [result] = await pool.query(
+                'UPDATE placas SET descripcion = ?, idCategoria = ?, kilogramos = ?, metros_cuadrados = ? WHERE idMaterial = ?',
+                [description.toUpperCase(), idCategoria, kilogramos, metros, id]
+            );
+
+            const [reason] = await pool.query(
+                'INSERT INTO movimientos SET tipo = ?, detalle = ?, idMaterial = ?, fecha = NOW(), material_tipo = 2', [motivo, detalle, id]
+            )
+
+            return { 
+                idMaterial: parseInt(id), 
+                idCategoria, 
+                descripcion: description,
             };
         } catch (error) {
             console.error(`Error al actualizar material con ID ${id}:`, error);
@@ -99,10 +159,18 @@ class MaterialModel {
         try {
             const [rows] = await pool.query(
                 `SELECT mov.idMovimiento, mov.detalle, m.descripcion AS material, tm.descripcion AS movimiento, DATE_FORMAT(mov.fecha, '%Y-%m-%d %H:%i:%s') AS fecha FROM movimientos mov
-                INNER JOIN materiales m ON mov.idMaterial = m.idMaterial
+                INNER JOIN materiales m ON mov.idMaterial = m.idMaterial AND material_tipo = 1
                 INNER JOIN tipo_movimientos tm ON mov.tipo = tm.idTipo
-                ORDER BY mov.fecha DESC`
+                
+                UNION
+            
+                SELECT mov.idMovimiento, mov.detalle, p.descripcion AS material, tm.descripcion AS movimiento, DATE_FORMAT(mov.fecha, '%Y-%m-%d %H:%i:%s') AS fecha FROM movimientos mov
+                INNER JOIN placas p ON mov.idMaterial = p.idMaterial AND material_tipo = 2
+                INNER JOIN tipo_movimientos tm ON mov.tipo = tm.idTipo
+
+                ORDER BY fecha DESC`
             );
+
             return rows;
         } catch (error) {
             console.error('Error al obtener todas los movimientos', error);
